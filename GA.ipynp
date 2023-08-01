@@ -1,0 +1,58 @@
+import random
+
+# Define the objective function to be optimized
+def objective_function(x, y):
+    return (x - 2) ** 2 + (y + 3) ** 2
+
+# Define the genetic algorithm parameters
+population_size = 50
+mutation_rate = 0.01
+num_generations = 100
+
+# Define the range of possible values for variables x and y
+x_range = (-10, 10)
+y_range = (-5, 5)
+
+# Initialize the population with random values for x and y
+population = []
+for _ in range(population_size):
+    x = random.uniform(*x_range)
+    y = random.uniform(*y_range)
+    population.append((x, y))
+
+# Main genetic algorithm loop
+for generation in range(num_generations):
+    # Evaluate the fitness of each individual in the population
+    fitness_scores = []
+    for individual in population:
+        x, y = individual
+        fitness = objective_function(x, y)
+        fitness_scores.append((individual, fitness))
+    
+    # Sort the population by fitness in ascending order
+    population = sorted(population, key=lambda x: objective_function(*x))
+    
+    # Select the best individuals for reproduction (top 50%)
+    parents = population[:population_size // 2]
+    
+    # Create a new population through crossover and mutation
+    new_population = []
+    while len(new_population) < population_size:
+        parent1 = random.choice(parents)
+        parent2 = random.choice(parents)
+        
+        # Perform crossover
+        child = (parent1[0], parent2[1])
+        
+        # Perform mutation
+        if random.random() < mutation_rate:
+            child = (child[0] + random.uniform(-0.1, 0.1), child[1] + random.uniform(-0.1, 0.1))
+        
+        new_population.append(child)
+    
+    # Replace the old population with the new population
+    population = new_population
+    
+    # Print the best individual in this generation
+    best_individual = min(population, key=lambda x: objective_function(*x))
+    print(f"Generation {generation+1}: Best Individual = {best_individual}, Fitness = {objective_function(*best_individual)}")

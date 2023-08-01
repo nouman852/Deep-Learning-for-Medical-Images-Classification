@@ -1,0 +1,46 @@
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.applications import ResNet50
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import GlobalAveragePooling2D, Dense
+
+# Assuming you have loaded and preprocessed the Kvasir dataset
+train_images = ...  # Shape: (num_samples, width, height, channels)
+train_labels = ...  # Shape: (num_samples, num_classes)
+
+# Preparing the first deep learning model
+base_model1 = ResNet50(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
+x1 = base_model1.output
+x1 = GlobalAveragePooling2D()(x1)
+model1 = Model(inputs=base_model1.input, outputs=x1)
+
+# Extracting features using the first model
+features_model1 = model1.predict(train_images)
+
+# Preparing the second deep learning model
+base_model2 = ResNet50(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
+x2 = base_model2.output
+x2 = GlobalAveragePooling2D()(x2)
+model2 = Model(inputs=base_model2.input, outputs=x2)
+
+# Extracting features using the second model
+features_model2 = model2.predict(train_images)
+
+# Fusing the features
+fused_features = np.concatenate((features_model1, features_model2), axis=1)
+
+# Creating a classifier for the fused features
+classifier = Dense(num_classes, activation='softmax')(fused_features)
+
+# Creating the final model
+final_model = Model(inputs=[base_model1.input, base_model2.input], outputs=classifier)
+
+# Compiling and training the final model
+final_model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+final_model.fit([train_images, train_images], train_labels, epochs=10, batch_size=32)
+
+# Extracting the fused features from the final model
+fused_features_output = final_model.predict([train_images, train_images])
+
+print("Fused Features:")
+print(fused_features_output)
